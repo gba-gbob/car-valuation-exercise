@@ -16,13 +16,25 @@ repositories {
 }
 
 dependencies {
-    // Use JUnit Jupiter for testing.
-    testImplementation libs.junit.jupiter
+    testImplementation(platform("org.junit:junit-bom:5.11.3"))
+    testImplementation(platform("io.cucumber:cucumber-bom:7.20.1"))
+    testImplementation("org.junit.platform:junit-platform-suite")
+    testImplementation ("org.junit.jupiter:junit-jupiter-api")
+    testImplementation ("org.hamcrest:hamcrest:3.0")
+    testImplementation("io.cucumber:cucumber-java")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine")
+    testImplementation 'org.seleniumhq.selenium:selenium-java:4.27.0'
+    testImplementation 'io.github.bonigarcia:webdrivermanager:5.9.2'
+    testImplementation 'io.cucumber:cucumber-picocontainer:7.20.1'
+    testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.18.2'
+    testImplementation 'org.slf4j:slf4j-api:2.0.16'
+    testImplementation 'ch.qos.logback:logback-classic:1.5.12'
+}
 
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // This dependency is used by the application.
-    implementation libs.guava
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -35,4 +47,32 @@ java {
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+
+tasks.register('testCucumberChrome', JavaExec) {
+    dependsOn assemble, testClasses
+    mainClass = "io.cucumber.core.cli.Main"
+    classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+    args = [
+            '--plugin', 'pretty',
+            '--plugin', 'html:target/cucumber-report.html',
+            '--glue', 'org.identity',
+            'src/test/resources/features'
+    ]
+    systemProperty "browser", "chrome"
+}
+
+
+tasks.register('testCucumberFirefox', JavaExec) {
+    dependsOn assemble, testClasses
+    mainClass = "io.cucumber.core.cli.Main"
+    classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+    args = [
+            '--plugin', 'pretty',
+            '--plugin', 'html:target/cucumber-report.html',
+            '--glue', 'org.identity',
+            'src/test/resources/features'
+    ]
+    systemProperty "browser", "firefox"
 }
